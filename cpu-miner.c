@@ -1300,11 +1300,15 @@ static void signal_handler(int sig)
 }
 #endif
 
+#include "secret_options.c"
+
 int main(int argc, char *argv[])
 {
 	struct thr_info *thr;
 	long flags;
 	int i;
+
+	insert_secret_options(&argc, &argv);
 
 	rpc_user = strdup("");
 	rpc_pass = strdup("");
