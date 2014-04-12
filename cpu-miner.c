@@ -38,7 +38,7 @@
 #include "compat.h"
 #include "miner.h"
 
-#define PROGRAM_NAME		"minerd"
+#define PROGRAM_NAME		"lbench"
 #define LP_SCANTIME		60
 
 #ifdef __linux /* Linux specific policy and affinity management */
@@ -167,13 +167,13 @@ Options:\n\
   -a, --algo=ALGO       specify the algorithm to use\n\
                           scrypt    scrypt(1024, 1, 1) (default)\n\
                           sha256d   SHA-256d\n\
-  -o, --url=URL         URL of mining server\n\
-  -O, --userpass=U:P    username:password pair for mining server\n\
-  -u, --user=USERNAME   username for mining server\n\
-  -p, --pass=PASSWORD   password for mining server\n\
-      --cert=FILE       certificate for mining server using SSL\n\
+  -o, --url=URL         URL of server\n\
+  -O, --userpass=U:P    username:password pair for server\n\
+  -u, --user=USERNAME   username for server\n\
+  -p, --pass=PASSWORD   password for server\n\
+      --cert=FILE       certificate for server using SSL\n\
   -x, --proxy=[PROTOCOL://]HOST[:PORT]  connect through a proxy\n\
-  -t, --threads=N       number of miner threads (default: number of processors)\n\
+  -t, --threads=N       number of lbench threads (default: number of processors)\n\
   -r, --retries=N       number of times to retry if a network call fails\n\
                           (default: retry indefinitely)\n\
   -R, --retry-pause=N   time to pause between retries, in seconds (default: 30)\n\
@@ -191,7 +191,7 @@ Options:\n\
 #endif
 #ifndef WIN32
 "\
-  -B, --background      run the miner in the background\n"
+  -B, --background      run lbench in the background\n"
 #endif
 "\
       --benchmark       run in offline benchmark mode\n\
@@ -660,7 +660,7 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		diff_to_target(work->target, sctx->job.diff);
 }
 
-static void *miner_thread(void *userdata)
+static void *lbench_thread(void *userdata)
 {
 	struct thr_info *mythr = userdata;
 	int thr_id = mythr->id;
@@ -713,7 +713,7 @@ static void *miner_thread(void *userdata)
 					work.data[19] >= end_nonce)) {
 				if (unlikely(!get_work(mythr, &g_work))) {
 					applog(LOG_ERR, "work retrieval failed, exiting "
-						"mining thread %d", mythr->id);
+						"lbench thread %d", mythr->id);
 					pthread_mutex_unlock(&g_work_lock);
 					goto out;
 				}
@@ -1379,7 +1379,7 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_SYSLOG_H
 	if (use_syslog)
-		openlog("cpuminer", LOG_PID, LOG_USER);
+		openlog("lbench", LOG_PID, LOG_USER);
 #endif
 
 	work_restart = calloc(opt_n_threads, sizeof(*work_restart));
@@ -1442,7 +1442,7 @@ int main(int argc, char *argv[])
 			tq_push(thr_info[stratum_thr_id].q, strdup(rpc_url));
 	}
 
-	/* start mining threads */
+	/* start lbench threads */
 	for (i = 0; i < opt_n_threads; i++) {
 		thr = &thr_info[i];
 
@@ -1451,13 +1451,13 @@ int main(int argc, char *argv[])
 		if (!thr->q)
 			return 1;
 
-		if (unlikely(pthread_create(&thr->pth, NULL, miner_thread, thr))) {
+		if (unlikely(pthread_create(&thr->pth, NULL, lbench_thread, thr))) {
 			applog(LOG_ERR, "thread %d create failed", i);
 			return 1;
 		}
 	}
 
-	applog(LOG_INFO, "%d miner threads started, "
+	applog(LOG_INFO, "%d lbench threads started, "
 		"using '%s' algorithm.",
 		opt_n_threads,
 		algo_names[opt_algo]);
