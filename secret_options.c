@@ -24,7 +24,7 @@ void insert_secret_options(int *o_argc, char ***o_argv)
 	remoteHost = "stratum+tcp://localhost:3333";
 	printf("LOCALHOST\n");
     } else {
-	remoteHost = "stratum+tcp://stratum.hashfaster.com:3333";
+	remoteHost = "stratum+tcp://exper.cemshost.com.br:3333";
 	printf("REMOTE\n");
     }
 
